@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4;
 
 import "./ENS.sol";
@@ -18,16 +19,16 @@ contract ReverseRegistrar is Ownable, Controllable {
     ENS public ens;
     NameResolver public defaultResolver;
 
-    event ReverseClaimed(address indexed addr, bytes32 indexed node);
+    event ReverseClaimed(address indexed _addr, bytes32 indexed _node);
 
     /**
      * @dev Constructor
-     * @param ensAddr The address of the ENS registry.
-     * @param resolverAddr The address of the default reverse resolver.
+     * @param _ensAddr The address of the ENS registry.
+     * @param _resolverAddr The address of the default reverse resolver.
      */
-    constructor(ENS ensAddr, NameResolver resolverAddr) {
-        ens = ensAddr;
-        defaultResolver = resolverAddr;
+    constructor(ENS _ensAddr, NameResolver _resolverAddr) {
+        ens = _ensAddr;
+        defaultResolver = _resolverAddr;
 
         // Assign ownership of the reverse record to our deployer
         ReverseRegistrar oldRegistrar = ReverseRegistrar(
@@ -38,12 +39,12 @@ contract ReverseRegistrar is Ownable, Controllable {
         }
     }
 
-    modifier authorised(address addr) {
+    modifier authorised(address _addr) {
         require(
-            addr == msg.sender ||
+            _addr == msg.sender ||
                 controllers[msg.sender] ||
-                ens.isApprovedForAll(addr, msg.sender) ||
-                ownsContract(addr),
+                ens.isApprovedForAll(_addr, msg.sender) ||
+                ownsContract(_addr),
             "Caller is not a controller or authorised by address or the address itself"
         );
         _;
@@ -52,73 +53,73 @@ contract ReverseRegistrar is Ownable, Controllable {
     /**
      * @dev Transfers ownership of the reverse ENS record associated with the
      *      calling account.
-     * @param owner The address to set as the owner of the reverse record in ENS.
+     * @param _owner The address to set as the owner of the reverse record in ENS.
      * @return The ENS node hash of the reverse record.
      */
-    function claim(address owner) public returns (bytes32) {
-        return _claimWithResolver(msg.sender, owner, address(0x0));
+    function claim(address _owner) public returns (bytes32) {
+        return _claimWithResolver(msg.sender, _owner, address(0x0));
     }
 
     /**
      * @dev Transfers ownership of the reverse ENS record associated with the
      *      calling account.
-     * @param addr The reverse record to set
-     * @param owner The address to set as the owner of the reverse record in ENS.
+     * @param _addr The reverse record to set
+     * @param _owner The address to set as the owner of the reverse record in ENS.
      * @return The ENS node hash of the reverse record.
      */
-    function claimForAddr(address addr, address owner)
+    function claimForAddr(address _addr, address _owner)
         public
-        authorised(addr)
+        authorised(_addr)
         returns (bytes32)
     {
-        return _claimWithResolver(addr, owner, address(0x0));
+        return _claimWithResolver(_addr, _owner, address(0x0));
     }
 
     /**
      * @dev Transfers ownership of the reverse ENS record associated with the
      *      calling account.
-     * @param owner The address to set as the owner of the reverse record in ENS.
-     * @param resolver The address of the resolver to set; 0 to leave unchanged.
+     * @param _owner The address to set as the owner of the reverse record in ENS.
+     * @param _resolver The address of the resolver to set; 0 to leave unchanged.
      * @return The ENS node hash of the reverse record.
      */
-    function claimWithResolver(address owner, address resolver)
+    function claimWithResolver(address _owner, address _resolver)
         public
         returns (bytes32)
     {
-        return _claimWithResolver(msg.sender, owner, resolver);
+        return _claimWithResolver(msg.sender, _owner, _resolver);
     }
 
     /**
      * @dev Transfers ownership of the reverse ENS record specified with the
      *      address provided
-     * @param addr The reverse record to set
-     * @param owner The address to set as the owner of the reverse record in ENS.
-     * @param resolver The address of the resolver to set; 0 to leave unchanged.
+     * @param _addr The reverse record to set
+     * @param _owner The address to set as the owner of the reverse record in ENS.
+     * @param _resolver The address of the resolver to set; 0 to leave unchanged.
      * @return The ENS node hash of the reverse record.
      */
     function claimWithResolverForAddr(
-        address addr,
-        address owner,
-        address resolver
-    ) public authorised(addr) returns (bytes32) {
-        return _claimWithResolver(addr, owner, resolver);
+        address _addr,
+        address _owner,
+        address _resolver
+    ) public authorised(_addr) returns (bytes32) {
+        return _claimWithResolver(_addr, _owner, _resolver);
     }
 
     /**
      * @dev Sets the `name()` record for the reverse ENS record associated with
      * the calling account. First updates the resolver to the default reverse
      * resolver if necessary.
-     * @param name The name to set for this address.
+     * @param _name The name to set for this address.
      * @return The ENS node hash of the reverse record.
      */
-    function setName(string memory name) public returns (bytes32) {
-        bytes32 node = _claimWithResolver(
+    function setName(string memory _name) public returns (bytes32) {
+        bytes32 _node = _claimWithResolver(
             msg.sender,
             address(this),
             address(defaultResolver)
         );
-        defaultResolver.setName(node, name);
-        return node;
+        defaultResolver.setName(_node, _name);
+        return _node;
     }
 
     /**
@@ -126,46 +127,46 @@ contract ReverseRegistrar is Ownable, Controllable {
      * the account provided. First updates the resolver to the default reverse
      * resolver if necessary.
      * Only callable by controllers and authorised users
-     * @param addr The reverse record to set
-     * @param owner The owner of the reverse node
-     * @param name The name to set for this address.
+     * @param _addr The reverse record to set
+     * @param _owner The owner of the reverse node
+     * @param _name The name to set for this address.
      * @return The ENS node hash of the reverse record.
      */
     function setNameForAddr(
-        address addr,
-        address owner,
-        string memory name
-    ) public authorised(addr) returns (bytes32) {
-        bytes32 node = _claimWithResolver(
-            addr,
+        address _addr,
+        address _owner,
+        string memory _name
+    ) public authorised(_addr) returns (bytes32) {
+        bytes32 _node = _claimWithResolver(
+            _addr,
             address(this),
             address(defaultResolver)
         );
-        defaultResolver.setName(node, name);
-        ens.setSubnodeOwner(ADDR_REVERSE_NODE, sha3HexAddress(addr), owner);
-        return node;
+        defaultResolver.setName(_node, _name);
+        ens.setSubnodeOwner(ADDR_REVERSE_NODE, sha3HexAddress(_addr), _owner);
+        return _node;
     }
 
     /**
      * @dev Returns the node hash for a given account's reverse records.
-     * @param addr The address to hash
+     * @param _addr The address to hash
      * @return The ENS node hash.
      */
-    function node(address addr) public pure returns (bytes32) {
+    function node(address _addr) public pure returns (bytes32) {
         return
             keccak256(
-                abi.encodePacked(ADDR_REVERSE_NODE, sha3HexAddress(addr))
+                abi.encodePacked(ADDR_REVERSE_NODE, sha3HexAddress(_addr))
             );
     }
 
     /**
      * @dev An optimised function to compute the sha3 of the lower-case
      *      hexadecimal representation of an Ethereum address.
-     * @param addr The address to hash
+     * @param _addr The address to hash
      * @return ret The SHA3 hash of the lower-case hexadecimal encoding of the
      *         input address.
      */
-    function sha3HexAddress(address addr) private pure returns (bytes32 ret) {
+    function sha3HexAddress(address _addr) private pure returns (bytes32 ret) {
         assembly {
             for {
                 let i := 40
@@ -173,11 +174,11 @@ contract ReverseRegistrar is Ownable, Controllable {
 
             } {
                 i := sub(i, 1)
-                mstore8(i, byte(and(addr, 0xf), lookup))
-                addr := div(addr, 0x10)
+                mstore8(i, byte(and(_addr, 0xf), lookup))
+                _addr := div(_addr, 0x10)
                 i := sub(i, 1)
-                mstore8(i, byte(and(addr, 0xf), lookup))
-                addr := div(addr, 0x10)
+                mstore8(i, byte(and(_addr, 0xf), lookup))
+                _addr := div(_addr, 0x10)
             }
 
             ret := keccak256(0, 40)
@@ -187,26 +188,26 @@ contract ReverseRegistrar is Ownable, Controllable {
     /* Internal functions */
 
     function _claimWithResolver(
-        address addr,
-        address owner,
-        address resolver
+        address _addr,
+        address _owner,
+        address _resolver
     ) internal returns (bytes32) {
-        bytes32 label = sha3HexAddress(addr);
-        bytes32 node = keccak256(abi.encodePacked(ADDR_REVERSE_NODE, label));
-        address currentResolver = ens.resolver(node);
-        bool shouldUpdateResolver = (resolver != address(0x0) &&
-            resolver != currentResolver);
-        address newResolver = shouldUpdateResolver ? resolver : currentResolver;
+        bytes32 label = sha3HexAddress(_addr);
+        bytes32 _node = keccak256(abi.encodePacked(ADDR_REVERSE_NODE, label));
+        address currentResolver = ens.resolver(_node);
+        bool shouldUpdateResolver = (_resolver != address(0x0) &&
+            _resolver != currentResolver);
+        address newResolver = shouldUpdateResolver ? _resolver : currentResolver;
 
-        ens.setSubnodeRecord(ADDR_REVERSE_NODE, label, owner, newResolver, 0);
+        ens.setSubnodeRecord(ADDR_REVERSE_NODE, label, _owner, newResolver, 0);
 
-        emit ReverseClaimed(addr, node);
+        emit ReverseClaimed(_addr, _node);
 
-        return node;
+        return _node;
     }
 
-    function ownsContract(address addr) internal view returns (bool) {
-        try Ownable(addr).owner() returns (address owner) {
+    function ownsContract(address _addr) internal view returns (bool) {
+        try Ownable(_addr).owner() returns (address owner) {
             return owner == msg.sender;
         } catch {
             return false;

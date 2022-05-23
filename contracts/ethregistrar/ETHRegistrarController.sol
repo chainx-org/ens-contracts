@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.8.4;
 
-import "./PriceOracle.sol";
+import "./StablePriceOracle.sol";
 import "./BaseRegistrarImplementation.sol";
 import "./StringUtils.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -30,7 +31,7 @@ contract ETHRegistrarController is Ownable {
     );
 
     BaseRegistrarImplementation base;
-    PriceOracle prices;
+    StablePriceOracle prices;
     uint public minCommitmentAge;
     uint public maxCommitmentAge;
 
@@ -40,7 +41,7 @@ contract ETHRegistrarController is Ownable {
     event NameRenewed(string name, bytes32 indexed label, uint cost, uint expires);
     event NewPriceOracle(address indexed oracle);
 
-    constructor(BaseRegistrarImplementation _base, PriceOracle _prices, uint _minCommitmentAge, uint _maxCommitmentAge) public {
+    constructor(BaseRegistrarImplementation _base, StablePriceOracle _prices, uint _minCommitmentAge, uint _maxCommitmentAge) {
         require(_maxCommitmentAge > _minCommitmentAge);
 
         base = _base;
@@ -49,13 +50,13 @@ contract ETHRegistrarController is Ownable {
         maxCommitmentAge = _maxCommitmentAge;
     }
 
-    function rentPrice(string memory name, uint duration) view public returns(uint) {
-        bytes32 hash = keccak256(bytes(name));
-        return prices.price(name, base.nameExpires(uint256(hash)), duration);
+    function rentPrice(uint duration) view public returns(uint) {
+        return prices.price(duration);
     }
 
     function valid(string memory name) public pure returns(bool) {
-        return name.strlen() >= 3;
+        (uint nameUint,bool result) = name.strToUint();
+        return name.strlen() == 5 && nameUint >9999 && nameUint < 100000 && result;
     }
 
     function available(string memory name) public view returns(bool) {
@@ -126,7 +127,7 @@ contract ETHRegistrarController is Ownable {
     }
 
     function renew(string calldata name, uint duration) external payable {
-        uint cost = rentPrice(name, duration);
+        uint cost = rentPrice(duration);
         require(msg.value >= cost);
 
         bytes32 label = keccak256(bytes(name));
@@ -137,11 +138,6 @@ contract ETHRegistrarController is Ownable {
         }
 
         emit NameRenewed(name, label, cost, expires);
-    }
-
-    function setPriceOracle(PriceOracle _prices) public onlyOwner {
-        prices = _prices;
-        emit NewPriceOracle(address(prices));
     }
 
     function setCommitmentAges(uint _minCommitmentAge, uint _maxCommitmentAge) public onlyOwner {
@@ -169,7 +165,7 @@ contract ETHRegistrarController is Ownable {
 
         delete(commitments[commitment]);
 
-        uint cost = rentPrice(name, duration);
+        uint cost = rentPrice(duration);
         require(duration >= MIN_REGISTRATION_DURATION);
         require(msg.value >= cost);
 
