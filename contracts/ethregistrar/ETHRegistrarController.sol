@@ -57,7 +57,7 @@ contract ETHRegistrarController is Ownable {
 
     function valid(string memory name) public pure returns(bool) {
         (uint nameUint,bool result) = name.strToUint();
-        return name.strlen() == 5 && nameUint >9999 && nameUint < 100000 && result;
+        return name.strlen() == 5 && nameUint > 9999 && nameUint < 100000 && result;
     }
 
     function available(string memory name) public view returns(bool) {
@@ -147,7 +147,7 @@ contract ETHRegistrarController is Ownable {
     }
 
     function withdraw() public onlyOwner {
-        payable(msg.sender).transfer(address(this).balance);        
+        payable(msg.sender).transfer(address(this).balance);
     }
 
     function supportsInterface(bytes4 interfaceID) external pure returns (bool) {
