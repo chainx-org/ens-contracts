@@ -50,8 +50,9 @@ contract ETHRegistrarController is Ownable {
         maxCommitmentAge = _maxCommitmentAge;
     }
 
-    function rentPrice(uint duration) view public returns(uint) {
-        return prices.price(duration);
+    function rentPrice(string memory name,uint duration) view public returns(uint) {
+        bytes32 hash = keccak256(bytes(name));
+        return prices.price(base.nameExpires(uint256(hash)),duration);
     }
 
     function valid(string memory name) public pure returns(bool) {
@@ -127,7 +128,7 @@ contract ETHRegistrarController is Ownable {
     }
 
     function renew(string calldata name, uint duration) external payable {
-        uint cost = rentPrice(duration);
+        uint cost = rentPrice(name,duration);
         require(msg.value >= cost);
 
         bytes32 label = keccak256(bytes(name));
@@ -165,7 +166,7 @@ contract ETHRegistrarController is Ownable {
 
         delete(commitments[commitment]);
 
-        uint cost = rentPrice(duration);
+        uint cost = rentPrice(name,duration);
         require(duration >= MIN_REGISTRATION_DURATION);
         require(msg.value >= cost);
 

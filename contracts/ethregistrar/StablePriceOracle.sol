@@ -22,15 +22,23 @@ contract StablePriceOracle is Ownable {
         setPrices(_rentPrices);
     }
 
-    function price(uint256 duration) external view returns(uint) {
-        return rentPrices.mul(duration);
+    function price(uint expires,uint256 duration) external view returns(uint) {
+        uint basePrice = rentPrices.mul(duration);
+        basePrice = basePrice.add(premium(expires));
+        return basePrice;
+    }
+
+    function premium(uint expires) internal view returns(uint) {
+        if(block.timestamp > expires){
+            return 10000000000000000000;
+        }
+        return 0;
     }
 
     function setPrices(uint256 _rentPrices) public onlyOwner {
         rentPrices = _rentPrices;
         emit RentPriceChanged(_rentPrices);
     }
-
 
     function supportsInterface(bytes4 interfaceID) public view virtual returns (bool) {
         return interfaceID == INTERFACE_META_ID || interfaceID == ORACLE_ID;
