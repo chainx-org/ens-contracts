@@ -22,6 +22,7 @@ contract BaseRegistrarImplementation is ERC721, BaseRegistrar  {
         keccak256("safeTransferFrom(address,address,uint256,bytes)")
     );
     bytes4 constant private RECLAIM_ID = bytes4(keccak256("reclaim(uint256,address)"));
+    bytes4 constant private IERC721Metadata_Id = type(IERC721Metadata).interfaceId;
 
     /**
      * v2.1.3 version of _isApprovedOrOwner which calls ownerOf(tokenId) and takes grace period into consideration instead of ERC721.ownerOf(tokenId);
@@ -150,6 +151,7 @@ contract BaseRegistrarImplementation is ERC721, BaseRegistrar  {
     function supportsInterface(bytes4 interfaceID) public override(ERC721, IERC165) pure returns (bool) {
         return interfaceID == INTERFACE_META_ID ||
                interfaceID == ERC721_ID ||
-               interfaceID == RECLAIM_ID;
+               interfaceID == RECLAIM_ID ||
+               interfaceID == IERC721Metadata_Id;
     }
 }
